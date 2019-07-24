@@ -1,0 +1,12 @@
+"address"
+{
+       "Proxy Server"
+       {
+              "platform_server_code" "1"
+              "localized_name"       "Ekinar"
+              "ip"
+              {
+                      "127.0.0.1" "27015"
+              }
+       }
+}
