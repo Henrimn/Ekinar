@@ -40,7 +40,7 @@ namespace Ekinar
         {
             ThreadPool.QueueUserWorkItem((o) =>
             {
-                Console.WriteLine("Web server started successfully.");
+                Console.WriteLine("Web server has been started successfully.");
                 try
                 {
                     while (_listener.IsListening)
