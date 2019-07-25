@@ -39,21 +39,32 @@ namespace Ekinar
         {
             var state = (State)result.AsyncState;
 
-            var bytesRead = state.SourceSocket.EndReceive(result);
-            if (bytesRead > 0)
+            try
             {
-                state.DestinationSocket.Send(state.Buffer, bytesRead, SocketFlags.None);
-                Console.WriteLine("Packet from: " + state.SourceSocket.RemoteEndPoint.ToString() + ". Length: " + bytesRead);
+                var bytesRead = state.SourceSocket.EndReceive(result);
+                if (bytesRead > 0)
+                {
+                    state.DestinationSocket.Send(state.Buffer, bytesRead, SocketFlags.None);
+                    Console.WriteLine("Packet from: " + state.SourceSocket.RemoteEndPoint.ToString() + ". Length: " + bytesRead);
 
-                byte[] data = new byte[bytesRead];
-                Buffer.BlockCopy(state.Buffer, 0, data, 0, bytesRead);
+                    byte[] data = new byte[bytesRead];
+                    Buffer.BlockCopy(state.Buffer, 0, data, 0, bytesRead);
 
-                // Decrypt before accepting new data
-                //PacketHandler.Decrypt(PacketHandler._Transformer(), data, data.Length);
+                    // Decrypt before accepting new data
+                    // PacketHandler.Decrypt(PacketHandler._Transformer(), data, data.Length);
 
-                Console.WriteLine("Data: \n" + BitConverter.ToString(data));
-                state.SourceSocket.BeginReceive(state.Buffer, 0, state.Buffer.Length, 0, OnDataReceive, state);
+                    Console.WriteLine("Data: \n" + BitConverter.ToString(data));
+                    state.SourceSocket.BeginReceive(state.Buffer, 0, state.Buffer.Length, 0, OnDataReceive, state);
+                }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+
+                state.DestinationSocket.Close();
+                state.SourceSocket.Close();
+            }
+            
         }
 
         private class State
