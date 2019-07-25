@@ -17,6 +17,7 @@ namespace Beggar
             string baseDirectory = Path.GetDirectoryName(beggarPath);
             string vindictusPath = Path.Combine(baseDirectory, "Vindictus.exe");
             string tempVindictusPath = Path.Combine(baseDirectory, "Vindictus.exe.bak");
+            string beggarCopy = Path.Combine(baseDirectory, "Beggar-Copy.exe");
             string batchPath = Path.Combine(baseDirectory, "start_game.bat");
             string hostsString = "127.0.0.1 vindictus.dn.nexoncdn.co.kr";
 
@@ -28,14 +29,14 @@ namespace Beggar
                 Console.WriteLine(@"=======  |    |   \|        \    \_\  \    \_\  \/    |    \    |   \ ");
                 Console.WriteLine(@"=======  |______  /_______  /\______  /\______  /\____|__  /____|_  / ");
                 Console.WriteLine(@"                \/        \/        \/        \/         \/       \/  ");
-                Console.WriteLine("\n-----------------------------------------------------------------------");
+                Console.WriteLine("\n-----------------------------------------------------------------------\n");
                 
                 File.Move(vindictusPath, tempVindictusPath); // temporary rename original Vindictus.exe to Vindictus.exe.bak
                 File.Copy(beggarPath, vindictusPath); // create a copy of Beggar and name it Vindictus.exe
 
-                Console.WriteLine("\nPlease press PLAY button in Nexon Launcher...");
+                Console.WriteLine("Please press PLAY button in Nexon Launcher...");
 
-                while(true)
+                while (true)
                 {
                     if (File.Exists(batchPath))
                         break;
@@ -46,14 +47,17 @@ namespace Beggar
                     Console.WriteLine(hostsString + " successfully added to hosts file."); // write to hosts file 
                 }
 
-                File.Delete(vindictusPath); // delete current Vindictus.exe (Beggar)
-                File.Move(tempVindictusPath, vindictusPath); // rename original Vindictus.exe
+                File.Move(vindictusPath, beggarCopy); // rename the copy of Beggar. Note: cannot use File.Delete here because it takes a while for the file to be actually deleted
+
+                File.Move(tempVindictusPath, vindictusPath); // rename original file back to Vindictus.exe
 
                 Process.Start(batchPath); // start the game with received launch options from Nexon Launcher
 
+                File.Delete(beggarCopy); // delete the copy of Beggar
+
                 Console.WriteLine("Waiting for Vindictus to start...");
 
-                while(true)
+                while (true)
                 {
                     Process[] vindictusProcess = Process.GetProcessesByName("Vindictus");
 
@@ -71,16 +75,20 @@ namespace Beggar
                 using (System.IO.StreamWriter file = new System.IO.StreamWriter(batchPath))
                 {
 
-                    file.Write("start vindictus.exe " + String.Join(" ", args)); // write launch options to batch file
+                    file.WriteLine("start vindictus.exe " + String.Join(" ", args)); // write launch options to batch file
                 }
             }
         }
 
         public static bool ModifyHostsFile(string entry)
         {
+            string hostsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"drivers\etc\hosts");
+            string copyHostsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"drivers\etc\hosts-copy");
             try
             {
-                using (StreamWriter w = File.AppendText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"drivers\etc\hosts")))
+                File.Copy(hostsFilePath, copyHostsFilePath); // make a copy of the original hosts file
+
+                using (StreamWriter w = File.AppendText(hostsFilePath))
                 {
                     w.WriteLine(entry);
                     return true;
