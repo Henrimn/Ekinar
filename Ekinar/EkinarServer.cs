@@ -43,44 +43,41 @@ namespace Ekinar
         private static void OnDataReceive(IAsyncResult result)
         {
             var state = (State)result.AsyncState;
-
-            var bytesRead = state.SourceSocket.EndReceive(result);
-
-            if (bytesRead > 0)
-            {
-                var receivedData = new byte[bytesRead];
-                Buffer.BlockCopy(state.Buffer, 0, receivedData, 0, bytesRead);
-
-                if (state.SourceSocket.RemoteEndPoint.ToString().Contains("27015")) // packet from server 
-                {
-                    var completedBuffer = _reassemblerServer.AnalyzePacket(receivedData);
-                    if (completedBuffer != null)
-                    {
-                        var packet = new Packet(completedBuffer);
-                        completedPacketList.Add(packet);
-                        Console.WriteLine("[Server] Packet from: {0} Opcode: {1} Length: {2}.", state.SourceSocket.RemoteEndPoint, packet.Opcode, packet.Buffer.Length);
-                    }
-                }
-                else // packet from client
-                {
-                    var completedBuffer = _reassemblerClient.AnalyzePacket(receivedData);
-                    if (completedBuffer != null)
-                    {
-                        var packet = new Packet(completedBuffer);
-                        completedPacketList.Add(packet);
-                        Console.WriteLine("[Client] Packet from: {0} Opcode: {1} Length: {2}.", state.SourceSocket.RemoteEndPoint, packet.Opcode, packet.Buffer.Length);
-                    }
-                }
-
-                state.DestinationSocket.Send(state.Buffer, bytesRead, SocketFlags.None);
-
-                state.SourceSocket.BeginReceive(state.Buffer, 0, state.Buffer.Length, 0, OnDataReceive, state);
-            }
-
-            /*
+            
             try
             {
-                
+                var bytesRead = state.SourceSocket.EndReceive(result);
+
+                if (bytesRead > 0)
+                {
+                    var receivedData = new byte[bytesRead];
+                    Buffer.BlockCopy(state.Buffer, 0, receivedData, 0, bytesRead);
+
+                    if (state.SourceSocket.RemoteEndPoint.ToString().Contains("27015")) // packet from server 
+                    {
+                        var completedBuffer = _reassemblerServer.AnalyzePacket(receivedData);
+                        if (completedBuffer != null)
+                        {
+                            var packet = new Packet(completedBuffer);
+                            completedPacketList.Add(packet);
+                            Console.WriteLine("[Server] Packet from: {0} Opcode: {1} Length: {2}.", state.SourceSocket.RemoteEndPoint, packet.Opcode, packet.Buffer.Length);
+                        }
+                    }
+                    else // packet from client
+                    {
+                        var completedBuffer = _reassemblerClient.AnalyzePacket(receivedData);
+                        if (completedBuffer != null)
+                        {
+                            var packet = new Packet(completedBuffer);
+                            completedPacketList.Add(packet);
+                            Console.WriteLine("[Client] Packet from: {0} Opcode: {1} Length: {2}.", state.SourceSocket.RemoteEndPoint, packet.Opcode, packet.Buffer.Length);
+                        }
+                    }
+
+                    state.DestinationSocket.Send(state.Buffer, bytesRead, SocketFlags.None);
+
+                    state.SourceSocket.BeginReceive(state.Buffer, 0, state.Buffer.Length, 0, OnDataReceive, state);
+                }
             }
             catch (Exception ex)
             {
@@ -89,7 +86,7 @@ namespace Ekinar
                 _reassemblerServer.Dispose();
                 state.DestinationSocket.Close();
                 state.SourceSocket.Close();
-            }*/
+            }
         }
 
         private class State
