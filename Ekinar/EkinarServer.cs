@@ -6,12 +6,17 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Diagnostics;
+using System.Collections.ObjectModel;
+using Ekinar.Core;
 
 namespace Ekinar
 {
     public class EkinarServer
     {
         private readonly Socket _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        public static ObservableCollection<Packet> completedPacketList = new ObservableCollection<Packet>();
+        private static PacketReassembler _reassemblerServer = new PacketReassembler();
+        private static PacketReassembler _reassemblerClient = new PacketReassembler();
 
         public void Start(IPEndPoint ekinarEndPoint, IPEndPoint officialEndPoint)
         {
@@ -39,32 +44,52 @@ namespace Ekinar
         {
             var state = (State)result.AsyncState;
 
+            var bytesRead = state.SourceSocket.EndReceive(result);
+
+            if (bytesRead > 0)
+            {
+                var receivedData = new byte[bytesRead];
+                Buffer.BlockCopy(state.Buffer, 0, receivedData, 0, bytesRead);
+
+                if (state.SourceSocket.RemoteEndPoint.ToString().Contains("27015")) // packet from server 
+                {
+                    var completedBuffer = _reassemblerServer.AnalyzePacket(receivedData);
+                    if (completedBuffer != null)
+                    {
+                        var packet = new Packet(completedBuffer);
+                        completedPacketList.Add(packet);
+                        Console.WriteLine("[Server] Packet from: {0} Opcode: {1} Length: {2}.", state.SourceSocket.RemoteEndPoint, packet.Opcode, packet.Buffer.Length);
+                    }
+                }
+                else // packet from client
+                {
+                    var completedBuffer = _reassemblerClient.AnalyzePacket(receivedData);
+                    if (completedBuffer != null)
+                    {
+                        var packet = new Packet(completedBuffer);
+                        completedPacketList.Add(packet);
+                        Console.WriteLine("[Client] Packet from: {0} Opcode: {1} Length: {2}.", state.SourceSocket.RemoteEndPoint, packet.Opcode, packet.Buffer.Length);
+                    }
+                }
+
+                state.DestinationSocket.Send(state.Buffer, bytesRead, SocketFlags.None);
+
+                state.SourceSocket.BeginReceive(state.Buffer, 0, state.Buffer.Length, 0, OnDataReceive, state);
+            }
+
+            /*
             try
             {
-                var bytesRead = state.SourceSocket.EndReceive(result);
-                if (bytesRead > 0)
-                {
-                    state.DestinationSocket.Send(state.Buffer, bytesRead, SocketFlags.None);
-                    Console.WriteLine("Packet from: " + state.SourceSocket.RemoteEndPoint.ToString() + ". Length: " + bytesRead);
-
-                    byte[] data = new byte[bytesRead];
-                    Buffer.BlockCopy(state.Buffer, 0, data, 0, bytesRead);
-
-                    // Decrypt before accepting new data
-                    // PacketHandler.Decrypt(PacketHandler._Transformer(), data, data.Length);
-
-                    Console.WriteLine("Data: \n" + BitConverter.ToString(data));
-                    state.SourceSocket.BeginReceive(state.Buffer, 0, state.Buffer.Length, 0, OnDataReceive, state);
-                }
+                
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-
+                _reassemblerClient.Dispose();
+                _reassemblerServer.Dispose();
                 state.DestinationSocket.Close();
                 state.SourceSocket.Close();
-            }
-            
+            }*/
         }
 
         private class State

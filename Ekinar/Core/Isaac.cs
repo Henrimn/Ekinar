@@ -31,7 +31,7 @@ namespace Ekinar.Core
         {
             if (_count == 0)
             {
-                Generate();
+                this.Generate();
                 _count = 256;
             }
             _count--;

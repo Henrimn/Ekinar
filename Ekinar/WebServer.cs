@@ -17,8 +17,7 @@ namespace Ekinar
                 throw new NotSupportedException(
                     "Needs Windows XP SP2, Server 2003 or later.");
 
-            // URI prefixes are required, for example 
-            // "http://localhost:8080/index/".
+            // URI prefixes are required
             if (prefixes == null || prefixes.Length == 0)
                 throw new ArgumentException("prefixes");
 
@@ -40,7 +39,7 @@ namespace Ekinar
         {
             ThreadPool.QueueUserWorkItem((o) =>
             {
-                Console.WriteLine("Web server has been started successfully.");
+                Console.WriteLine("[Ekinar] Web server has been started successfully.");
                 try
                 {
                     while (_listener.IsListening)
