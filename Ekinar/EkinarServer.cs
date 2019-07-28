@@ -8,16 +8,16 @@ using System.Net.Sockets;
 using System.Diagnostics;
 using System.Collections.ObjectModel;
 using Ekinar.Core;
+using System.Runtime.InteropServices;
 
 namespace Ekinar
 {
     public class EkinarServer
     {
         private readonly Socket _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        public static ObservableCollection<Packet> completedPacketList = new ObservableCollection<Packet>();
         private static PacketReassembler _reassemblerServer = new PacketReassembler();
         private static PacketReassembler _reassemblerClient = new PacketReassembler();
-
+        private const int WM_COPYDATA = 0x004A;
         public void Start(IPEndPoint ekinarEndPoint, IPEndPoint officialEndPoint)
         {
             _mainSocket.Bind(ekinarEndPoint);
@@ -43,34 +43,63 @@ namespace Ekinar
         private static void OnDataReceive(IAsyncResult result)
         {
             var state = (State)result.AsyncState;
-            
             try
             {
                 var bytesRead = state.SourceSocket.EndReceive(result);
-
                 if (bytesRead > 0)
                 {
-                    var receivedData = new byte[bytesRead];
-                    Buffer.BlockCopy(state.Buffer, 0, receivedData, 0, bytesRead);
-
                     if (state.SourceSocket.RemoteEndPoint.ToString().Contains("27015")) // packet from server 
                     {
+                        var receivedData = new byte[bytesRead];
+                        Buffer.BlockCopy(state.Buffer, 0, receivedData, 0, bytesRead);
+
                         var completedBuffer = _reassemblerServer.AnalyzePacket(receivedData);
                         if (completedBuffer != null)
                         {
                             var packet = new Packet(completedBuffer);
-                            completedPacketList.Add(packet);
-                            Console.WriteLine("[Server] Packet from: {0} Opcode: {1} Length: {2}.", state.SourceSocket.RemoteEndPoint, packet.Opcode, packet.Buffer.Length);
+
+                            byte[] direction = System.Text.Encoding.ASCII.GetBytes("S");
+                            var sendData = new byte[1 + completedBuffer.Length];
+                            Buffer.BlockCopy(direction, 0, sendData, 0, 1);
+                            Buffer.BlockCopy(completedBuffer, 0, sendData, 1, completedBuffer.Length);
+
+                            IntPtr hWnd = FindWindow(null, "VinSeek");
+                            if (hWnd == null)
+                            {
+                                Console.WriteLine("VinSeek not found - cannot send data.");
+                            }
+                            else
+                            {
+                                SendMessage(hWnd, sendData, 0, sendData.Length);
+                            }
+                            Console.WriteLine("[Server] Opcode: {0} Length: {1}.", packet.Opcode, packet.Buffer.Length);
                         }
                     }
-                    else // packet from client
+                    else
                     {
+                        var receivedData = new byte[bytesRead];
+                        Buffer.BlockCopy(state.Buffer, 0, receivedData, 0, bytesRead);
+
                         var completedBuffer = _reassemblerClient.AnalyzePacket(receivedData);
                         if (completedBuffer != null)
                         {
                             var packet = new Packet(completedBuffer);
-                            completedPacketList.Add(packet);
-                            Console.WriteLine("[Client] Packet from: {0} Opcode: {1} Length: {2}.", state.SourceSocket.RemoteEndPoint, packet.Opcode, packet.Buffer.Length);
+
+                            byte[] direction = System.Text.Encoding.ASCII.GetBytes("C");
+                            var sendData = new byte[1 + completedBuffer.Length];
+                            Buffer.BlockCopy(direction, 0, sendData, 0, 1);
+                            Buffer.BlockCopy(completedBuffer, 0, sendData, 1, completedBuffer.Length);
+
+                            IntPtr hWnd = FindWindow(null, "VinSeek");
+                            if (hWnd == null)
+                            {
+                                Console.WriteLine("VinSeek not found - cannot send data.");
+                            }
+                            else
+                            {
+                                SendMessage(hWnd, sendData, 0, sendData.Length);
+                            }
+                            Console.WriteLine("[Client] Opcode: {0} Length: {1}.", packet.Opcode, packet.Buffer.Length);
                         }
                     }
 
@@ -99,8 +128,29 @@ namespace Ekinar
             {
                 SourceSocket = source;
                 DestinationSocket = destination;
-                Buffer = new byte[1460];
+                Buffer = new byte[20000]; // read a lot because why not
             }
         }
+
+        #region VinSeek interops
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr FindWindow(String lpClassName, String lpWindowName);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
+        static IntPtr SendMessage(IntPtr hWnd, byte[] array, int startIndex, int length)
+        {
+            IntPtr ptr = Marshal.AllocHGlobal(IntPtr.Size * 3 + length);
+            Marshal.WriteIntPtr(ptr, 0, IntPtr.Zero);
+            Marshal.WriteIntPtr(ptr, IntPtr.Size, (IntPtr)length);
+            IntPtr dataPtr = new IntPtr(ptr.ToInt64() + IntPtr.Size * 3);
+            Marshal.WriteIntPtr(ptr, IntPtr.Size * 2, dataPtr);
+            Marshal.Copy(array, startIndex, dataPtr, length);
+            IntPtr result = SendMessage(hWnd, WM_COPYDATA, IntPtr.Zero, ptr);
+            Marshal.FreeHGlobal(ptr);
+            return result;
+        }
+        #endregion
     }
 }

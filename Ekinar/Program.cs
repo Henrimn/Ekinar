@@ -16,7 +16,6 @@ namespace Ekinar
 
         static void Main(string[] args)
         {
-
             Console.WriteLine("___________ ____  __..___  _______      _____   __________ ");
             Console.WriteLine(@"\_   _____/|    |/ _||   | \      \    /  _  \  \______   \");
             Console.WriteLine(@" |    __)_ |      <  |   | /   |   \  /  /_\  \  |       _/");

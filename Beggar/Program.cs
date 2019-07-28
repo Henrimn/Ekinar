@@ -22,7 +22,7 @@ namespace Beggar
             string backupVindictusPath = Path.Combine(baseDirectory, "Vindictus.exe.bak");
             string beggarCopy = Path.Combine(baseDirectory, "Beggar-Copy.exe");
             string batchPath = Path.Combine(baseDirectory, "start_game.bat");
-            string hostsString = "127.0.0.1 vindictus.dn.nexoncdn.co.kr";
+            string[] hostsString = { "127.0.0.1 vindictus.dn.nexoncdn.co.kr", "127.0.0.1 mhtwcheck.garenanow.com", "127.0.0.1 heroes.dn.nexoncdn.co.kr" };
 
             if (args.Length == 0)
             {
@@ -92,7 +92,7 @@ namespace Beggar
             }
         }
 
-        public static bool ModifyHostsFile(string entry)
+        public static bool ModifyHostsFile(string[] servers)
         {
             try
             {
@@ -100,7 +100,10 @@ namespace Beggar
 
                 using (StreamWriter w = File.AppendText(_hostsFilePath))
                 {
-                    w.WriteLine(entry);
+                    foreach (var server in servers)
+                    {
+                        w.WriteLine(server);
+                    }
                     return true;
                 }
             }
