@@ -23,24 +23,93 @@ namespace Ekinar
             Console.WriteLine(@"/_______  /|____|__ \|___|\____|__  /\____|__  / |____|_  /");
             Console.WriteLine(@"        \/         \/             \/         \/         \/ ");
             Console.WriteLine("\n-----------------------------------------------------------\n");
-
             _handler += new EventHandler(Handler);
             SetConsoleCtrlHandler(_handler, true);
             Random rand = new Random();
-            string[] prefixes = { "http://127.0.0.1/Game/Vindictus/en-US/EndPoint.txt/", "http://127.0.0.1/EndPoint.txt/" ,"http://127.0.0.1/ko-KR/EndPoint.txt/" };
-            string[] naServerIp = {"34.218.172.146", "34.218.175.106", "34.218.178.68", "34.218.182.12", "34.218.182.202", "34.218.188.180", "34.218.190.181" };
-            string[] euServerIp = {"18.184.128.66", "18.184.151.140", "18.184.195.53", "18.184.196.86", "18.184.197.129", "18.184.198.133" };
+            string[] prefixes = { "http://127.0.0.1/Game/Vindictus/en-US/EndPoint.txt/", "http://127.0.0.1/EndPoint.txt/", "http://127.0.0.1/ko-KR/EndPoint.txt/" };
+            string[] naServerIp = { "34.218.172.146", "34.218.175.106", "34.218.178.68", "34.218.182.12", "34.218.182.202", "34.218.188.180", "34.218.190.181" };
+            string[] euServerIp = { "18.184.128.66", "18.184.151.140", "18.184.195.53", "18.184.196.86", "18.184.197.129", "18.184.198.133" };
             string[] twServerIp = { "124.108.151.3", "124.108.151.4", "124.108.151.5", "124.108.151.6", "124.108.151.7" };
 
-            
             int index = rand.Next(naServerIp.Length);
-            // int index = rand.Next(euServerIp.Length);
-            // int index = rand.Next(twServerIp.Length);
+            string ekinarIp = "127.0.0.1";
+            int ekinarPort = 27015;
+            string serverIp = naServerIp[index];
+            int serverPort = 27015;
+
+            if (args.Length > 0)
+            {
+                for (int i = 0; i < args.Length; i++)
+                {
+                    if (args[i].ToLower() == "-ekinarip")
+                    {
+                        try
+                        {
+                            ekinarIp = args[i + 1];
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            Console.WriteLine("You have not set ekinarip. Please try again");
+                            Console.ReadKey();
+                            Environment.Exit(0);
+                        }
+                    }
+                    else if (args[i].ToLower() == "-ekinarport")
+                    {
+                        try
+                        {
+                            ekinarPort = Convert.ToInt32(args[i + 1]);
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            Console.WriteLine("You have not set ekinarport. Please try again");
+                            Console.ReadKey();
+                            Environment.Exit(0);
+                        }
+                    }
+                    else if (args[i].ToLower() == "-serverip")
+                    {
+                        try
+                        {
+                            serverIp = args[i + 1];
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            Console.WriteLine("You have not set serverip. Please try again");
+                            Console.ReadKey();
+                            Environment.Exit(0);
+                        }
+                    }
+                    else if (args[i].ToLower() == "-serverport")
+                    {
+                        try
+                        {
+                            serverPort = Convert.ToInt32(args[i + 1]);
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            Console.WriteLine("You have not set serverport. Please try again");
+                            Console.ReadKey();
+                            Environment.Exit(0);
+                        }
+                    }
+                    else if (args[i].ToLower() == "-eu")
+                    {
+                        index = rand.Next(euServerIp.Length);
+                        serverIp = euServerIp[index];
+                    }
+                    else if (args[i].ToLower() == "-tw")
+                    {
+                        index = rand.Next(twServerIp.Length);
+                        serverIp = twServerIp[index];
+                    }
+                }
+            }
 
             WebServer webServer = new WebServer(WebServerEndPointResponse, prefixes);
             webServer.Run();
-            
-            new EkinarServer().Start(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27015), new IPEndPoint(IPAddress.Parse(naServerIp[index]), 27015));
+
+            new EkinarServer().Start(ekinarIp, ekinarPort, serverIp, serverPort);
             Console.ReadKey();
         }
 

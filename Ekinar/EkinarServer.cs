@@ -17,12 +17,23 @@ namespace Ekinar
         private readonly Socket _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         private static PacketReassembler _reassemblerServer = new PacketReassembler();
         private static PacketReassembler _reassemblerClient = new PacketReassembler();
+        private static string _ekinarIp;
+        private static int _ekinarPort;
+        private static string _serverIp;
+        private static int _serverPort;
         private const int WM_COPYDATA = 0x004A;
-        public void Start(IPEndPoint ekinarEndPoint, IPEndPoint officialEndPoint)
+        public void Start(string ekinarIp, int ekinarPort, string serverIp, int serverPort)
         {
+            IPEndPoint ekinarEndPoint = new IPEndPoint(IPAddress.Parse(ekinarIp), ekinarPort);
+            IPEndPoint officialEndPoint = new IPEndPoint(IPAddress.Parse(serverIp), serverPort);
+            _ekinarIp = ekinarIp;
+            _ekinarPort = ekinarPort;
+            _serverIp = serverIp;
+            _serverPort = serverPort;
+
             _mainSocket.Bind(ekinarEndPoint);
             _mainSocket.Listen(10);
-
+            Console.WriteLine("[Ekinar] Proxy server is running on {0}:{1}. Connecting to {2}:{3}", ekinarIp, ekinarPort, serverIp, serverPort);
             while (true)
             {
                 var source = _mainSocket.Accept(); // create socket from client to ekinar
@@ -48,7 +59,7 @@ namespace Ekinar
                 var bytesRead = state.SourceSocket.EndReceive(result);
                 if (bytesRead > 0)
                 {
-                    if (state.SourceSocket.RemoteEndPoint.ToString().Contains("27015")) // packet from server 
+                    if (state.SourceSocket.RemoteEndPoint.ToString().Contains(_serverPort.ToString())) // packet from server 
                     {
                         var receivedData = new byte[bytesRead];
                         Buffer.BlockCopy(state.Buffer, 0, receivedData, 0, bytesRead);
