@@ -18,11 +18,11 @@ namespace Beggar
         {
             string beggarPath = Assembly.GetExecutingAssembly().Location;
             string baseDirectory = Path.GetDirectoryName(beggarPath);
-            string vindictusPath = Path.Combine(baseDirectory, "Vindictus.exe");
-            string backupVindictusPath = Path.Combine(baseDirectory, "Vindictus.exe.bak");
+            string vindictusPath = Path.Combine(baseDirectory, "heroes.exe"); // or Vindictus.exe
+            string backupVindictusPath = Path.Combine(baseDirectory, "heroes.exe.bak");
             string beggarCopy = Path.Combine(baseDirectory, "Beggar-Copy.exe");
             string batchPath = Path.Combine(baseDirectory, "start_game.bat");
-            string[] hostsString = { "127.0.0.1 vindictus.dn.nexoncdn.co.kr", "127.0.0.1 mhtwcheck.garenanow.com", "127.0.0.1 heroes.dn.nexoncdn.co.kr" };
+            string[] hostsString = { "127.0.0.1 vindictus.dn.nexoncdn.co.kr", "127.0.0.1 twheroes.arenadownload.nexon.com", "127.0.0.1 heroes.dn.nexoncdn.co.kr" };
 
             if (args.Length == 0)
             {

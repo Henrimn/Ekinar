@@ -26,10 +26,10 @@ namespace Ekinar
             _handler += new EventHandler(Handler);
             SetConsoleCtrlHandler(_handler, true);
             Random rand = new Random();
-            string[] prefixes = { "http://127.0.0.1/Game/Vindictus/en-US/EndPoint.txt/", "http://127.0.0.1/EndPoint.txt/", "http://127.0.0.1/ko-KR/EndPoint.txt/" };
+            string[] prefixes = { "http://127.0.0.1/Game/Vindictus/en-US/EndPoint.txt/", "http://127.0.0.1/Config/EndPoint.txt/", "http://127.0.0.1/ko-KR/EndPoint.txt/" };
             string[] naServerIp = { "34.218.172.146", "34.218.175.106", "34.218.178.68", "34.218.182.12", "34.218.182.202", "34.218.188.180", "34.218.190.181" };
             string[] euServerIp = { "18.184.128.66", "18.184.151.140", "18.184.195.53", "18.184.196.86", "18.184.197.129", "18.184.198.133" };
-            string[] twServerIp = { "124.108.151.3", "124.108.151.4", "124.108.151.5", "124.108.151.6", "124.108.151.7" };
+            string[] twServerIp = { "35.201.193.64", "35.221.213.113", "35.236.150.197", "107.167.180.28", "104.199.253.221", "104.199.176.204", "34.80.48.138", "104.199.243.122" };
 
             int index = rand.Next(naServerIp.Length);
             string ekinarIp = "127.0.0.1";
