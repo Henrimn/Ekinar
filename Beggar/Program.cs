@@ -71,7 +71,7 @@ namespace Beggar
 
                 while (true)
                 {
-                    Process[] vindictusProcess = Process.GetProcessesByName("Vindictus");
+                    Process[] vindictusProcess = Process.GetProcessesByName("heroes");
 
                     if (vindictusProcess.Length > 0)
                     {
@@ -87,7 +87,7 @@ namespace Beggar
                 using (System.IO.StreamWriter file = new System.IO.StreamWriter(batchPath))
                 {
 
-                    file.WriteLine("start vindictus.exe " + String.Join(" ", args)); // write launch options to batch file
+                    file.WriteLine("start heroes.exe " + String.Join(" ", args)); // write launch options to batch file
                 }
             }
         }

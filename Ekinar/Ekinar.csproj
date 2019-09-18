@@ -67,9 +67,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\PacketReassembler.cs" />
+    <Compile Include="Core\PacketHandler.cs" />
     <Compile Include="Core\Isaac.cs" />
-    <Compile Include="Core\Packet.cs" />
     <Compile Include="Core\Transformer.cs" />
     <Compile Include="EkinarServer.cs" />
     <Compile Include="Program.cs" />
